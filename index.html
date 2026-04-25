@@ -90,9 +90,14 @@ button {
     <div class="card">
         <div class="small">Verlauf</div>
         <canvas id="chart"></canvas>
+        <div class="card">
+    <div class="small">Fahrten</div>
+    <div id="liste"></div>
+</div>
     </div>
 
 </div>
+
 
 <script>
 let fahrten = JSON.parse(localStorage.getItem("fahrten")) || [];
@@ -112,7 +117,7 @@ function speichern() {
 
     let verbrauch = (liter / km) * 100;
 
-    fahrten.push({ verbrauch });
+    fahrten.push({ km, liter, preis, verbrauch });
     localStorage.setItem("fahrten", JSON.stringify(fahrten));
 
     anzeigen();
@@ -141,10 +146,34 @@ function anzeigen() {
         }
     });
 
+    // Durchschnitt
     if (fahrten.length > 0) {
         let avg = daten.reduce((a,b)=>a+b)/daten.length;
         document.getElementById("avg").innerText = avg.toFixed(1);
     }
+
+    // Liste anzeigen
+    let liste = document.getElementById("liste");
+    if (liste) {
+        liste.innerHTML = "";
+
+        fahrten.forEach((f, i) => {
+            liste.innerHTML += `
+                <div class="card">
+                    <b>${f.km} km</b> | ${f.liter} L <br>
+                    Verbrauch: ${f.verbrauch.toFixed(2)} L/100km
+                    <br><br>
+                    <button onclick="loeschen(${i})">Löschen</button>
+                </div>
+            `;
+        });
+    }
+}
+
+function loeschen(index) {
+    fahrten.splice(index, 1);
+    localStorage.setItem("fahrten", JSON.stringify(fahrten));
+    anzeigen();
 }
 
 if ("serviceWorker" in navigator) {
