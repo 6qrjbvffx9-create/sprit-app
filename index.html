@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SpritApp</title>
-
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 body {
     margin: 0;
@@ -62,50 +59,60 @@ button {
 .small {
     color: #94a3b8;
 }
+
+/* Swipe */
+.eintrag {
+    position: relative;
+    overflow: hidden;
+}
+
+.loeschen-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 80px;
+    background: red;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 </style>
 </head>
-
 <body>
-
 <header>🚗 SpritApp</header>
-
 <div class="container">
+<div class="card">
+    <div class="small">Neue Fahrt</div>
 
-    <div class="card">
-        <div class="small">Neue Fahrt</div>
+    <input type="number" id="km" placeholder="Gefahrene km">
+    <input type="number" id="liter" placeholder="Getankte Liter">
+    <input type="number" id="preis" placeholder="Preis €/L">
 
-        <input type="number" id="km" placeholder="Gefahrene km">
-        <input type="number" id="liter" placeholder="Getankte Liter">
-        <input type="number" id="preis" placeholder="Preis €/L">
+    <button onclick="speichern()">Speichern</button>
+</div>
 
-        <button onclick="speichern()">Speichern</button>
-    </div>
+<div class="card">
+    <div class="small">Durchschnitt</div>
+    <div id="avg" class="stat">0.0</div>
+    <div class="small">L / 100 km</div>
+</div>
 
-    <div class="card">
-        <div class="small">Durchschnitt</div>
-        <div id="avg" class="stat">0.0</div>
-        <div class="small">L / 100 km</div>
-    </div>
+<div class="card">
+    <div class="small">Verlauf</div>
+    <canvas id="chart"></canvas>
+</div>
 
-    <div class="card">
-        <div class="small">Verlauf</div>
-        <canvas id="chart"></canvas>
-        <div class="card">
+<div class="card">
     <div class="small">Fahrten</div>
     <div id="liste"></div>
 </div>
-        <div class="card">
-    <div class="small">Fahrten</div>
-    <div id="liste"></div>
 </div>
-    </div>
-
-</div>
-
-
 <script>
 let fahrten = JSON.parse(localStorage.getItem("fahrten")) || [];
 let chart;
+let startX = 0;
 
 anzeigen();
 
@@ -150,23 +157,22 @@ function anzeigen() {
         }
     });
 
-    // Durchschnitt
     if (fahrten.length > 0) {
         let avg = daten.reduce((a,b)=>a+b)/daten.length;
         document.getElementById("avg").innerText = avg.toFixed(1);
     }
 
-    // Liste anzeigen
     let liste = document.getElementById("liste");
     liste.innerHTML = "";
 
     fahrten.forEach((f, i) => {
         liste.innerHTML += `
-            <div class="card">
-                <b>${f.km} km</b> | ${f.liter} L <br>
-                Verbrauch: ${f.verbrauch.toFixed(2)} L/100km
-                <br><br>
-                <button onclick="loeschen(${i})">Löschen</button>
+            <div class="card eintrag" ontouchstart="startSwipe(event)" ontouchmove="moveSwipe(event, ${i})">
+                <div>
+                    <b>${f.km} km</b> | ${f.liter} L <br>
+                    Verbrauch: ${f.verbrauch.toFixed(2)} L/100km
+                </div>
+                <div class="loeschen-btn" onclick="loeschen(${i})">X</div>
             </div>
         `;
     });
@@ -178,10 +184,23 @@ function loeschen(index) {
     anzeigen();
 }
 
+function startSwipe(e) {
+    startX = e.touches[0].clientX;
+}
+
+function moveSwipe(e, index) {
+    let currentX = e.touches[0].clientX;
+    let diff = startX - currentX;
+
+    if (diff > 80) {
+        loeschen(index);
+    }
+}
+
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js");
 }
 </script>
-
 </body>
 </html>
+:::
