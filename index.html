@@ -158,20 +158,18 @@ function anzeigen() {
 
     // Liste anzeigen
     let liste = document.getElementById("liste");
-    if (liste) {
-        liste.innerHTML = "";
+    liste.innerHTML = "";
 
-        fahrten.forEach((f, i) => {
-            liste.innerHTML += `
-                <div class="card">
-                    <b>${f.km} km</b> | ${f.liter} L <br>
-                    Verbrauch: ${f.verbrauch.toFixed(2)} L/100km
-                    <br><br>
-                    <button onclick="loeschen(${i})">Löschen</button>
-                </div>
-            `;
-        });
-    }
+    fahrten.forEach((f, i) => {
+        liste.innerHTML += `
+            <div class="card">
+                <b>${f.km} km</b> | ${f.liter} L <br>
+                Verbrauch: ${f.verbrauch.toFixed(2)} L/100km
+                <br><br>
+                <button onclick="loeschen(${i})">Löschen</button>
+            </div>
+        `;
+    });
 }
 
 function loeschen(index) {
