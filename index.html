@@ -111,95 +111,67 @@ button {
 </div>
 <script>
 let fahrten = JSON.parse(localStorage.getItem("fahrten")) || [];
-let chart;
-let startX = 0;
 
-anzeigen();
+const kmInput = document.getElementById("km");
+const literInput = document.getElementById("liter");
+const preisInput = document.getElementById("preis");
+
+const avgText = document.getElementById("avg");
+const ctx = document.getElementById("chart").getContext("2d");
+
+let chart = new Chart(ctx, {
+    type: "line",
+    data: {
+        labels: [],
+        datasets: [{
+            label: "Verbrauch (L/100km)",
+            data: [],
+            borderWidth: 2,
+            tension: 0.3
+        }]
+    }
+});
+
+function updateUI() {
+    if (fahrten.length === 0) return;
+
+    let verbräuche = fahrten.map(f => f.verbrauch);
+
+    let avg = verbräuche.reduce((a, b) => a + b, 0) / verbräuche.length;
+
+    avgText.innerText = avg.toFixed(1);
+
+    chart.data.labels = fahrten.map((_, i) => "Fahrt " + (i + 1));
+    chart.data.datasets[0].data = verbräuche;
+    chart.update();
+}
 
 function speichern() {
-    let km = parseFloat(document.getElementById("km").value);
-    let liter = parseFloat(document.getElementById("liter").value);
-    let preis = parseFloat(document.getElementById("preis").value);
+    let km = parseFloat(kmInput.value);
+    let liter = parseFloat(literInput.value);
+    let preis = parseFloat(preisInput.value);
 
-    if (!km || !liter || !preis) {
-        alert("Bitte alle Felder ausfüllen!");
-        return;
-    }
+    if (!km || !liter) return;
 
     let verbrauch = (liter / km) * 100;
 
-    fahrten.push({ km, liter, preis, verbrauch });
-    localStorage.setItem("fahrten", JSON.stringify(fahrten));
-
-    anzeigen();
-}
-
-function anzeigen() {
-    let labels = fahrten.map((_, i) => i + 1);
-    let daten = fahrten.map(f => f.verbrauch);
-
-    if (chart) chart.destroy();
-
-    let ctx = document.getElementById("chart");
-
-    chart = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: labels,
-            datasets: [{
-                data: daten,
-                borderWidth: 3,
-                tension: 0.4
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } }
-        }
+    fahrten.push({
+        km,
+        liter,
+        preis,
+        verbrauch
     });
 
-    if (fahrten.length > 0) {
-        let avg = daten.reduce((a,b)=>a+b)/daten.length;
-        document.getElementById("avg").innerText = avg.toFixed(1);
-    }
-
-    let liste = document.getElementById("liste");
-    liste.innerHTML = "";
-
-    fahrten.forEach((f, i) => {
-        liste.innerHTML += `
-            <div class="card eintrag" ontouchstart="startSwipe(event)" ontouchmove="moveSwipe(event, ${i})">
-                <div>
-                    <b>${f.km} km</b> | ${f.liter} L <br>
-                    Verbrauch: ${f.verbrauch.toFixed(2)} L/100km
-                </div>
-                <div class="loeschen-btn" onclick="loeschen(${i})">X</div>
-            </div>
-        `;
-    });
-}
-
-function loeschen(index) {
-    fahrten.splice(index, 1);
     localStorage.setItem("fahrten", JSON.stringify(fahrten));
-    anzeigen();
+
+    kmInput.value = "";
+    literInput.value = "";
+    preisInput.value = "";
+
+    updateUI();
 }
 
-function startSwipe(e) {
-    startX = e.touches[0].clientX;
-}
-
-function moveSwipe(e, index) {
-    let currentX = e.touches[0].clientX;
-    let diff = startX - currentX;
-
-    if (diff > 80) {
-        loeschen(index);
-    }
-}
-
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-}
+updateUI();
 </script>
 </body>
 </html>
