@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SpritApp</title>
-<link rel="manifest" href="manifest.json">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body {
     margin: 0;
@@ -34,89 +35,72 @@ header {
 input {
     width: 100%;
     padding: 14px;
-    margin-top: 10px;
-    border-radius: 12px;
+    margin: 8px 0;
+    border-radius: 10px;
     border: none;
-    font-size: 16px;
 }
 
 button {
     width: 100%;
     padding: 15px;
-    margin-top: 15px;
-    border-radius: 15px;
+    border-radius: 12px;
     border: none;
-    background: linear-gradient(90deg, #3b82f6, #06b6d4);
-    color: white;
+    margin-top: 10px;
     font-size: 16px;
 }
 
-.stat {
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.small {
-    color: #94a3b8;
-}
-
-/* Swipe */
-.eintrag {
-    position: relative;
-    overflow: hidden;
-}
-
-.loeschen-btn {
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 80px;
-    background: red;
+.save-btn {
+    background: linear-gradient(90deg,#3b82f6,#06b6d4);
     color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.reset-btn {
+    background: #ef4444;
+    color: white;
 }
 </style>
 </head>
+
 <body>
+
 <header>🚗 SpritApp</header>
+
 <div class="container">
-<div class="card">
-    <div class="small">Neue Fahrt</div>
-
-    <input type="number" id="km" placeholder="Gefahrene km">
-    <input type="number" id="liter" placeholder="Getankte Liter">
-    <input type="number" id="preis" placeholder="Preis €/L">
-
-    <button onclick="speichern()">Speichern</button>
-</div>
 
 <div class="card">
-    <div class="small">Durchschnitt</div>
-    <div id="avg" class="stat">0.0</div>
-    <div class="small">L / 100 km</div>
+<h3>Neue Fahrt</h3>
+
+<input id="km" placeholder="Gefahrene km">
+<input id="liter" placeholder="Getankte Liter">
+<input id="preis" placeholder="Preis €/L">
+
+<button class="save-btn" onclick="speichern()">Speichern</button>
+<button class="reset-btn" onclick="resetData()">Alles löschen</button>
 </div>
 
 <div class="card">
-    <div class="small">Verlauf</div>
-    <canvas id="chart"></canvas>
+<h3>Durchschnitt</h3>
+<h1 id="avg">0.0</h1>
+<p>L / 100 km</p>
+<p id="kosten"></p>
 </div>
 
 <div class="card">
-    <div class="small">Fahrten</div>
-    <div id="liste"></div>
+<h3>Verlauf</h3>
+<canvas id="chart"></canvas>
 </div>
+
 </div>
+
 <script>
 let fahrten = JSON.parse(localStorage.getItem("fahrten")) || [];
 
 const kmInput = document.getElementById("km");
 const literInput = document.getElementById("liter");
 const preisInput = document.getElementById("preis");
-
 const avgText = document.getElementById("avg");
+const kostenText = document.getElementById("kosten");
+
 const ctx = document.getElementById("chart").getContext("2d");
 
 let chart = new Chart(ctx, {
@@ -138,12 +122,18 @@ function updateUI() {
     let verbräuche = fahrten.map(f => f.verbrauch);
 
     let avg = verbräuche.reduce((a, b) => a + b, 0) / verbräuche.length;
-
     avgText.innerText = avg.toFixed(1);
 
     chart.data.labels = fahrten.map((_, i) => "Fahrt " + (i + 1));
     chart.data.datasets[0].data = verbräuche;
     chart.update();
+
+    let letzte = fahrten[fahrten.length - 1];
+
+    if (letzte.preis) {
+        let kosten = letzte.liter * letzte.preis;
+        kostenText.innerText = "Kosten: " + kosten.toFixed(2) + " €";
+    }
 }
 
 function speichern() {
@@ -171,8 +161,14 @@ function speichern() {
     updateUI();
 }
 
+function resetData() {
+    fahrten = [];
+    localStorage.removeItem("fahrten");
+    location.reload();
+}
+
 updateUI();
 </script>
+
 </body>
 </html>
-:::
